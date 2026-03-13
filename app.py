@@ -1,17 +1,19 @@
 import streamlit as st
 import pickle
-import pandas as pd
 import requests
 
+# Load model files
+movies = pickle.load(open("movies.pkl", "rb"))
+similarity = pickle.load(open("similarity.pkl", "rb"))
+
+# Fetch movie poster
 def fetch_poster(movie_id):
 
     try:
         url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=920aeef5ddc3ca5e1d2deca4f8e35f94"
+        data = requests.get(url).json()
 
-        data = requests.get(url, timeout=10)
-        data = data.json()
-
-        poster_path = data.get('poster_path')
+        poster_path = data.get("poster_path")
 
         if poster_path:
             return "https://image.tmdb.org/t/p/w500/" + poster_path
@@ -21,12 +23,11 @@ def fetch_poster(movie_id):
     except:
         return "https://via.placeholder.com/500x750?text=Error"
 
-movies = pickle.load(open('movies.pkl','rb'))
-similarity = pickle.load(open('similarity.pkl','rb'))
 
+# Recommendation function
 def recommend(movie):
 
-    movie_index = movies[movies['title'] == movie].index[0]
+    movie_index = movies[movies["title"] == movie].index[0]
 
     distances = similarity[movie_index]
 
@@ -44,17 +45,17 @@ def recommend(movie):
         movie_id = movies.iloc[i[0]].movie_id
 
         recommended_movies.append(movies.iloc[i[0]].title)
-
         recommended_posters.append(fetch_poster(movie_id))
 
     return recommended_movies, recommended_posters
 
 
-st.title("Movie Recommendation System")
+# UI
+st.title("🎬 Movie Recommendation System")
 
 selected_movie = st.selectbox(
     "Select Movie",
-    movies['title'].values
+    movies["title"].values
 )
 
 if st.button("Recommend"):
